@@ -1,4 +1,5 @@
 import { Scene } from 'phaser';
+import WalletService from '../services/WalletService.js';
 
 export class MainMenu extends Scene
 {
@@ -13,6 +14,7 @@ export class MainMenu extends Scene
         const score = this.registry.get('highscore');
 
         const textStyle = { fontFamily: 'Arial Black', fontSize: 38, color: '#ffffff', stroke: '#000000', strokeThickness: 8 };
+        const smallTextStyle = { fontFamily: 'Arial', fontSize: 24, color: '#ffffff', stroke: '#000000', strokeThickness: 4 };
 
         this.add.image(512, 970, 'background').setScale(2.6);
 
@@ -26,6 +28,33 @@ export class MainMenu extends Scene
         });
 
         this.add.text(32, 32, `High Score: ${score}`, textStyle);
+
+        // 显示钱包信息
+        const walletAddress = WalletService.getConnectedAddress();
+        const walletName = WalletService.getWalletName();
+        
+        if (walletAddress) {
+            const shortAddress = WalletService.formatAddress(walletAddress);
+            const walletInfo = walletName 
+                ? `${walletName}: ${shortAddress}`
+                : `Bitcoin: ${shortAddress}`;
+            
+            this.add.text(32, 100, walletInfo, smallTextStyle);
+            
+            // 断开连接按钮
+            const disconnectButton = this.add.rectangle(850, 100, 120, 40, 0xff0000)
+                .setInteractive({ useHandCursor: true })
+                .on('pointerdown', () => {
+                    WalletService.disconnect();
+                    this.scene.start('WalletConnect');
+                });
+            
+            this.add.text(850, 100, '断开', {
+                fontFamily: 'Arial',
+                fontSize: 20,
+                color: '#ffffff'
+            }).setOrigin(0.5);
+        }
 
         const instructions = [
             'How many coins can you',
@@ -44,5 +73,3 @@ export class MainMenu extends Scene
     }
 }
 
-// add the connect button to the scene
-// all options described in the related section
