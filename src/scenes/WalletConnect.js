@@ -1,6 +1,6 @@
 /**
- * 钱包连接场景
- * 使用 BDK 创建或导入 Bitcoin 钱包
+ * Wallet Connection Scene
+ * Create or import Bitcoin wallet using BDK
  */
 import { Scene } from 'phaser';
 import WalletService from '../services/WalletService.js';
@@ -16,16 +16,16 @@ export class WalletConnect extends Scene {
 
     create() {
         const textStyle = { 
-            fontFamily: 'Arial Black', 
-            fontSize: 38, 
+            fontFamily: 'Arial', 
+            fontSize: 32, 
             color: '#ffffff', 
             stroke: '#000000', 
-            strokeThickness: 8 
+            strokeThickness: 6 
         };
 
         const titleStyle = { 
             fontFamily: 'Arial Black', 
-            fontSize: 48, 
+            fontSize: 52, 
             color: '#ffffff', 
             stroke: '#000000', 
             strokeThickness: 8 
@@ -33,18 +33,18 @@ export class WalletConnect extends Scene {
 
         this.add.image(512, 970, 'background').setScale(2.6);
 
-        // 标题
-        this.add.text(450, 200, 'Bitcoin 钱包', titleStyle)
+        // Title
+        this.add.text(450, 180, 'Bitcoin Wallet', titleStyle)
             .setAlign('center')
             .setOrigin(0.5);
 
-        // 显示选择界面
+        // Show wallet options
         this.showWalletOptions();
 
-        // 错误提示（初始隐藏）
+        // Error message (hidden initially)
         this.errorText = this.add.text(450, 1400, '', {
             fontFamily: 'Arial',
-            fontSize: 28,
+            fontSize: 26,
             color: '#ff0000',
             stroke: '#000000',
             strokeThickness: 4
@@ -53,8 +53,8 @@ export class WalletConnect extends Scene {
         .setOrigin(0.5)
         .setVisible(false);
 
-        // 加载提示（初始隐藏）
-        this.loadingText = this.add.text(450, 1400, '正在处理...', {
+        // Loading message (hidden initially)
+        this.loadingText = this.add.text(450, 1400, 'Processing...', {
             fontFamily: 'Arial',
             fontSize: 28,
             color: '#ffff00',
@@ -69,44 +69,58 @@ export class WalletConnect extends Scene {
     showWalletOptions() {
         const textStyle = { 
             fontFamily: 'Arial', 
-            fontSize: 32, 
+            fontSize: 30, 
             color: '#ffffff', 
             stroke: '#000000', 
             strokeThickness: 6 
         };
 
-        // 说明文字
+        // Instructions
         const instructions = [
-            '请选择操作：',
+            'Choose an option:',
             '',
-            '创建新钱包 或 导入现有钱包'
+            'Create new wallet or import existing wallet'
         ];
-        this.add.text(450, 400, instructions, textStyle)
+        this.add.text(450, 350, instructions, textStyle)
             .setAlign('center')
             .setOrigin(0.5);
 
-        // 创建新钱包按钮
-        const createButton = this.add.rectangle(450, 700, 400, 80, 0x00ff00)
+        // Create new wallet button
+        const createButton = this.add.rectangle(450, 650, 420, 90, 0x00ff00)
             .setInteractive({ useHandCursor: true })
             .on('pointerdown', () => this.showCreateWallet())
             .on('pointerover', () => createButton.setFillStyle(0x00cc00))
             .on('pointerout', () => createButton.setFillStyle(0x00ff00));
 
-        this.add.text(450, 700, '创建新钱包', {
+        this.add.text(450, 650, 'Create New Wallet', {
             fontFamily: 'Arial Black',
-            fontSize: 32,
+            fontSize: 34,
             color: '#000000'
         })
         .setOrigin(0.5);
 
-        // 导入钱包按钮
-        const importButton = this.add.rectangle(450, 850, 400, 80, 0x0088ff)
+        // Import wallet button
+        const importButton = this.add.rectangle(450, 780, 420, 90, 0x0088ff)
             .setInteractive({ useHandCursor: true })
             .on('pointerdown', () => this.showImportWallet())
             .on('pointerover', () => importButton.setFillStyle(0x0066cc))
             .on('pointerout', () => importButton.setFillStyle(0x0088ff));
 
-        this.add.text(450, 850, '导入现有钱包', {
+        this.add.text(450, 780, 'Import Wallet', {
+            fontFamily: 'Arial Black',
+            fontSize: 34,
+            color: '#ffffff'
+        })
+        .setOrigin(0.5);
+
+        // Skip login button
+        const skipButton = this.add.rectangle(450, 920, 420, 90, 0x666666)
+            .setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => this.handleSkipLogin())
+            .on('pointerover', () => skipButton.setFillStyle(0x555555))
+            .on('pointerout', () => skipButton.setFillStyle(0x666666));
+
+        this.add.text(450, 920, 'Skip & Play as Guest', {
             fontFamily: 'Arial Black',
             fontSize: 32,
             color: '#ffffff'
@@ -126,37 +140,39 @@ export class WalletConnect extends Scene {
             strokeThickness: 4 
         };
 
-        this.add.text(450, 400, '创建新钱包', {
+        const titleStyle = {
             fontFamily: 'Arial Black',
-            fontSize: 40,
+            fontSize: 44,
             color: '#ffffff',
             stroke: '#000000',
             strokeThickness: 6
-        })
-        .setAlign('center')
-        .setOrigin(0.5);
+        };
 
-        const warning = [
-            '⚠️ 重要提示：',
-            '',
-            '创建钱包后会生成助记词',
-            '请妥善保管，丢失将无法恢复！',
-            '',
-            '点击下方按钮创建钱包'
-        ];
-        this.add.text(450, 600, warning, textStyle)
+        this.add.text(450, 350, 'Create New Wallet', titleStyle)
             .setAlign('center')
             .setOrigin(0.5);
 
-        const createButton = this.add.rectangle(450, 900, 400, 80, 0x00ff00)
+        const warning = [
+            '⚠️ Important Notice:',
+            '',
+            'A mnemonic phrase will be generated',
+            'Keep it safe - you cannot recover it if lost!',
+            '',
+            'Click the button below to create wallet'
+        ];
+        this.add.text(450, 550, warning, textStyle)
+            .setAlign('center')
+            .setOrigin(0.5);
+
+        const createButton = this.add.rectangle(450, 850, 420, 90, 0x00ff00)
             .setInteractive({ useHandCursor: true })
             .on('pointerdown', () => this.handleCreateWallet())
             .on('pointerover', () => createButton.setFillStyle(0x00cc00))
             .on('pointerout', () => createButton.setFillStyle(0x00ff00));
 
-        this.add.text(450, 900, '生成新钱包', {
+        this.add.text(450, 850, 'Generate Wallet', {
             fontFamily: 'Arial Black',
-            fontSize: 32,
+            fontSize: 34,
             color: '#000000'
         })
         .setOrigin(0.5);
@@ -174,49 +190,50 @@ export class WalletConnect extends Scene {
             strokeThickness: 4 
         };
 
-        this.add.text(450, 400, '导入钱包', {
+        const titleStyle = {
             fontFamily: 'Arial Black',
-            fontSize: 40,
+            fontSize: 44,
             color: '#ffffff',
             stroke: '#000000',
             strokeThickness: 6
-        })
-        .setAlign('center')
-        .setOrigin(0.5);
+        };
 
-        const instructions = [
-            '请输入您的 BIP39 助记词',
-            '（12 或 24 个单词）',
-            '',
-            '注意：也可以直接提供 descriptor'
-        ];
-        this.add.text(450, 550, instructions, textStyle)
+        this.add.text(450, 350, 'Import Wallet', titleStyle)
             .setAlign('center')
             .setOrigin(0.5);
 
-        // 输入框背景
-        const inputBg = this.add.rectangle(450, 750, 600, 200, 0x333333)
+        const instructions = [
+            'Enter your BIP39 mnemonic phrase',
+            '(12 or 24 words)',
+            '',
+            'Note: You can also provide a descriptor'
+        ];
+        this.add.text(450, 500, instructions, textStyle)
+            .setAlign('center')
+            .setOrigin(0.5);
+
+        // Input box background
+        const inputBg = this.add.rectangle(450, 700, 650, 180, 0x333333)
             .setStrokeStyle(2, 0xffffff);
 
-        // 提示：实际应用中需要创建真正的输入框
-        // 这里使用文本提示
-        this.add.text(450, 750, '点击下方按钮输入助记词\n（实际应用中需要输入框）', {
+        // Placeholder text
+        this.add.text(450, 700, 'Click button below to enter mnemonic\n(Input field implementation needed)', {
             fontFamily: 'Arial',
-            fontSize: 24,
+            fontSize: 22,
             color: '#ffffff',
             align: 'center'
         })
         .setOrigin(0.5);
 
-        const importButton = this.add.rectangle(450, 1000, 400, 80, 0x0088ff)
+        const importButton = this.add.rectangle(450, 950, 420, 90, 0x0088ff)
             .setInteractive({ useHandCursor: true })
             .on('pointerdown', () => this.handleImportWallet())
             .on('pointerover', () => importButton.setFillStyle(0x0066cc))
             .on('pointerout', () => importButton.setFillStyle(0x0088ff));
 
-        this.add.text(450, 1000, '导入钱包', {
+        this.add.text(450, 950, 'Import Wallet', {
             fontFamily: 'Arial Black',
-            fontSize: 32,
+            fontSize: 34,
             color: '#ffffff'
         })
         .setOrigin(0.5);
@@ -226,20 +243,20 @@ export class WalletConnect extends Scene {
         this.showLoading(true);
 
         try {
-            // 注意：实际实现需要生成助记词和 xprv
-            // 这里使用示例，实际需要根据 bdk-wallet-web API 实现
-            const mnemonic = 'example mnemonic phrase here'; // 需要实际生成
+            // Note: Actual implementation needs to generate mnemonic and xprv
+            // This is a placeholder - needs to be implemented according to bdk-wallet-web API
+            const mnemonic = 'example mnemonic phrase here'; // Needs actual generation
             
-            // 提示：需要实现从助记词生成 xprv 的逻辑
-            // 或者使用 bdk-wallet-web 提供的功能
-            throw new Error('需要实现助记词生成和 xprv 创建逻辑');
+            // Note: Need to implement logic to generate xprv from mnemonic
+            // Or use bdk-wallet-web provided functionality
+            throw new Error('Mnemonic generation and xprv creation logic needs to be implemented');
             
             // const result = await WalletService.createWalletFromMnemonic(mnemonic, xprv);
             // this.showSuccessMessage(result.address, mnemonic);
 
         } catch (error) {
-            console.error('创建钱包错误:', error);
-            this.showError(error.message || '创建钱包失败');
+            console.error('Create wallet error:', error);
+            this.showError(error.message || 'Failed to create wallet');
         } finally {
             this.showLoading(false);
         }
@@ -249,24 +266,24 @@ export class WalletConnect extends Scene {
         this.showLoading(true);
 
         try {
-            // 提示：实际应用中需要从输入框获取助记词
-            // 这里使用示例
-            const mnemonic = prompt('请输入您的助记词（12 或 24 个单词）:');
+            // Note: Actual implementation needs to get mnemonic from input field
+            // This is a placeholder
+            const mnemonic = prompt('Enter your mnemonic phrase (12 or 24 words):');
             
             if (!mnemonic || mnemonic.trim().length === 0) {
-                throw new Error('请输入有效的助记词');
+                throw new Error('Please enter a valid mnemonic phrase');
             }
 
-            // 注意：需要实现从助记词生成 xprv 的逻辑
-            // 或者直接使用 descriptor
-            throw new Error('需要实现从助记词创建钱包的逻辑');
+            // Note: Need to implement logic to create wallet from mnemonic
+            // Or use descriptor directly
+            throw new Error('Logic to create wallet from mnemonic needs to be implemented');
             
             // const result = await WalletService.createWalletFromMnemonic(mnemonic.trim(), xprv);
             // this.showSuccessMessage(result.address);
 
         } catch (error) {
-            console.error('导入钱包错误:', error);
-            this.showError(error.message || '导入钱包失败');
+            console.error('Import wallet error:', error);
+            this.showError(error.message || 'Failed to import wallet');
         } finally {
             this.showLoading(false);
         }
@@ -283,22 +300,22 @@ export class WalletConnect extends Scene {
 
         const shortAddress = WalletService.formatAddress(address);
         const message = [
-            '钱包创建成功！',
+            'Wallet Created Successfully!',
             '',
-            `地址: ${shortAddress}`,
+            `Address: ${shortAddress}`,
         ];
 
         if (mnemonic) {
-            message.push('', '⚠️ 请保存您的助记词：', mnemonic);
+            message.push('', '⚠️ Please save your mnemonic phrase:', mnemonic);
         }
 
-        message.push('', '正在进入游戏...');
+        message.push('', 'Entering game...');
 
         this.add.text(450, 1000, message, textStyle)
             .setAlign('center')
             .setOrigin(0.5);
 
-        // 延迟后进入主菜单
+        // Delay before entering main menu
         this.time.delayedCall(3000, () => {
             this.scene.start('MainMenu');
         });
@@ -306,7 +323,7 @@ export class WalletConnect extends Scene {
 
     showError(message) {
         if (this.errorText) {
-            this.errorText.setText(`错误: ${message}`);
+            this.errorText.setText(`Error: ${message}`);
             this.errorText.setVisible(true);
         }
     }
@@ -320,8 +337,19 @@ export class WalletConnect extends Scene {
         }
     }
 
+    handleSkipLogin() {
+        // Mark as skipped
+        this.registry.set('walletSkipped', true);
+        
+        // Clear any existing wallet connection state
+        WalletService.disconnect();
+        
+        // Go directly to preloader scene
+        this.scene.start('Preloader');
+    }
+
     clearScene() {
-        // 清除所有子对象（除了背景和错误/加载提示）
+        // Clear all child objects (except background and error/loading messages)
         this.children.list.forEach(child => {
             if (child !== this.errorText && child !== this.loadingText && child.type !== 'Image') {
                 child.destroy();

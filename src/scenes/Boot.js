@@ -22,23 +22,30 @@ export class Boot extends Scene
 
     async create ()
     {
-        //  A global value to store the highscore in
+        // A global value to store the highscore in
         this.registry.set('highscore', 0);
+        
+        // Initialize wallet skipped flag (if not exists)
+        if (this.registry.get('walletSkipped') === undefined) {
+            this.registry.set('walletSkipped', false);
+        }
 
-        // 检查钱包连接状态
+        // Check wallet connection status
         try {
             const isConnected = await WalletService.checkConnection();
             
             if (isConnected) {
-                // 已连接钱包，直接进入预加载
+                // Wallet connected, clear skip flag
+                this.registry.set('walletSkipped', false);
+                // Go directly to preloader
                 this.scene.start('Preloader');
             } else {
-                // 未连接钱包，进入钱包连接场景
+                // No wallet connected, go to wallet connect scene
                 this.scene.start('WalletConnect');
             }
         } catch (error) {
-            console.error('检查钱包连接失败:', error);
-            // 出错时也进入钱包连接场景
+            console.error('Failed to check wallet connection:', error);
+            // On error, also go to wallet connect scene
             this.scene.start('WalletConnect');
         }
     }
