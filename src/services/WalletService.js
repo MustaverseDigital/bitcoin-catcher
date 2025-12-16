@@ -2,12 +2,18 @@
  * Bitcoin 钱包服务
  * 使用 @bitcoindevkit/bdk-wallet-web 创建和管理 Bitcoin 钱包
  */
-import { Wallet, KeychainKind, MemoryDatabase } from '@bitcoindevkit/bdk-wallet-web';
+import { Wallet } from '@bitcoindevkit/bdk-wallet-web';
+
+// KeychainKind 是类型别名，不是导出，直接使用字符串
+const KeychainKind = {
+    External: 'external',
+    Internal: 'internal'
+};
 
 class WalletService {
     constructor() {
         this.wallet = null;
-        this.network = 'testnet'; // 或 'mainnet'
+        this.network = 'testnet'; // 或 'bitcoin' (mainnet)
         this.isConnected = false;
         this.currentAddress = null;
         this.mnemonic = null;
@@ -52,19 +58,15 @@ class WalletService {
             const externalDescriptor = this.createDescriptor(xprv, false);
             const internalDescriptor = this.createDescriptor(xprv, true);
 
-            // 创建钱包
-            this.wallet = new Wallet({
-                descriptor: externalDescriptor,
-                changeDescriptor: internalDescriptor,
-                network: this.network,
-                database: new MemoryDatabase(),
-            });
+            // 创建钱包 - 使用 Wallet.create() 静态方法
+            this.wallet = Wallet.create(
+                this.network,
+                externalDescriptor,
+                internalDescriptor
+            );
 
-            // 获取第一个地址
-            const addressInfo = this.wallet.getAddress({ 
-                index: 0, 
-                keychain: KeychainKind.External 
-            });
+            // 获取第一个地址 - 使用 next_unused_address 方法
+            const addressInfo = this.wallet.next_unused_address(KeychainKind.External);
             
             this.currentAddress = addressInfo.address;
             this.mnemonic = mnemonic;
@@ -95,17 +97,15 @@ class WalletService {
      */
     async createWalletFromDescriptors(externalDescriptor, internalDescriptor) {
         try {
-            this.wallet = new Wallet({
-                descriptor: externalDescriptor,
-                changeDescriptor: internalDescriptor,
-                network: this.network,
-                database: new MemoryDatabase(),
-            });
+            // 使用 Wallet.create() 静态方法
+            this.wallet = Wallet.create(
+                this.network,
+                externalDescriptor,
+                internalDescriptor
+            );
 
-            const addressInfo = this.wallet.getAddress({ 
-                index: 0, 
-                keychain: KeychainKind.External 
-            });
+            // 获取第一个地址
+            const addressInfo = this.wallet.next_unused_address(KeychainKind.External);
             
             this.currentAddress = addressInfo.address;
             this.isConnected = true;
@@ -189,18 +189,22 @@ class WalletService {
 
     /**
      * 获取新地址
-     * @param {number} index - 地址索引
+     * @param {number} index - 地址索引（可选，默认获取下一个未使用地址）
      * @returns {string}
      */
-    getNewAddress(index = 0) {
+    getNewAddress(index = null) {
         if (!this.wallet) {
             throw new Error('钱包未初始化');
         }
 
-        const addressInfo = this.wallet.getAddress({ 
-            index: index, 
-            keychain: KeychainKind.External 
-        });
+        let addressInfo;
+        if (index !== null) {
+            // 使用 peek_address 获取指定索引的地址
+            addressInfo = this.wallet.peek_address(KeychainKind.External, index);
+        } else {
+            // 使用 next_unused_address 获取下一个未使用地址
+            addressInfo = this.wallet.next_unused_address(KeychainKind.External);
+        }
         
         return addressInfo.address;
     }
@@ -217,13 +221,16 @@ class WalletService {
         // 需要先同步钱包
         // await this.sync();
         
-        const balance = this.wallet.getBalance();
-        return balance.total;
+        // 获取余额 - 需要查看实际 API
+        // const balance = this.wallet.getBalance();
+        // return balance.total;
+        
+        throw new Error('需要实现余额获取功能');
     }
 
     /**
      * 同步钱包（从区块链获取最新状态）
-     * @param {Object} blockchain - 区块链客户端（如 Esplora）
+     * @param {Object} blockchain - 区块链客户端（如 EsploraClient）
      * @returns {Promise<void>}
      */
     async sync(blockchain) {
@@ -235,13 +242,19 @@ class WalletService {
             throw new Error('需要提供区块链客户端');
         }
 
-        await this.wallet.sync(blockchain);
+        // 需要查看实际的同步 API
+        // await this.wallet.sync(blockchain);
+        throw new Error('需要实现同步功能');
     }
 
     /**
      * 断开钱包连接
      */
     disconnect() {
+        if (this.wallet) {
+            // 释放 WASM 资源
+            this.wallet.free();
+        }
         this.wallet = null;
         this.currentAddress = null;
         this.mnemonic = null;
@@ -273,12 +286,13 @@ class WalletService {
     }
 
     /**
-     * 设置网络（testnet 或 mainnet）
+     * 设置网络（testnet 或 bitcoin/mainnet）
      * @param {string} network 
      */
     setNetwork(network) {
-        if (network !== 'testnet' && network !== 'mainnet' && network !== 'regtest') {
-            throw new Error('无效的网络类型');
+        const validNetworks = ['bitcoin', 'testnet', 'testnet4', 'signet', 'regtest'];
+        if (!validNetworks.includes(network)) {
+            throw new Error(`无效的网络类型。有效值: ${validNetworks.join(', ')}`);
         }
         this.network = network;
         localStorage.setItem('btc_wallet_network', network);
